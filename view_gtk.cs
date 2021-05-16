@@ -15,7 +15,7 @@ class View : Window {
     Pos moveFrom = null;
     bool wasCapture;
     Stack<(Move, bool)> undoStack = new Stack<(Move, bool)>();
-    bool undone = false, isSimulation = false;
+    bool undone = false, selectedSquare = false;
     const int Square = 80;  // square size in pixels
     Pixbuf blackPawn = new Pixbuf("black_pawn.png"),
            whitePawn = new Pixbuf("white_pawn.png");
@@ -23,7 +23,6 @@ class View : Window {
     public View(Game game, Player[] players) : base("") {
         this.game = game;
         this.players = players;
-        isSimulation = game.seed >= 0;
         Resize(Square * Game.Size, Square * Game.Size);
         AddEvents((int) (EventMask.KeyPressMask | EventMask.ButtonPressMask));
         setTitle();
@@ -45,7 +44,7 @@ class View : Window {
     }
 
     void unmove() {
-        if (isSimulation) {
+        if (true) {
             if (undoStack.Count == 0) Application.Quit();
             else {
                 undone = true;
@@ -117,7 +116,7 @@ class View : Window {
                                 Square * x, Square * y);
             }
         
-        if (!undone && moveFrom != null)
+        if ((!undone || (selectedSquare && game.seed < 0)) && moveFrom != null)
             highlight(c, green, moveFrom.x, moveFrom.y);
         else if (!undone && lastMove != null) {
             highlight(c, green, lastMove.from.x, lastMove.from.y);
@@ -136,6 +135,7 @@ class View : Window {
     }
 
     protected override bool OnKeyPressEvent (EventKey e) {
+        selectedSquare = false;
         if (e.Key == Gdk.Key.z) {
             unmove();
             return true;
@@ -150,6 +150,7 @@ class View : Window {
     }
     
     protected override bool OnButtonPressEvent (EventButton e) {
+        selectedSquare = true;
         if (gameOver())
             return true;
             
@@ -165,7 +166,8 @@ class View : Window {
             Move move = new Move(moveFrom, new Pos(x, y));
             if (game.validMove(move)) {
                 moveFrom = null;
-                game.move(move);
+                undoStack.Push((move, game.move(move)));
+                undone = false;
                 QueueDraw();
                 if (game.winner == 0)
                     this.move();  // opponent move
