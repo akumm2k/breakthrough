@@ -44,14 +44,12 @@ class View : Window {
     }
 
     void unmove() {
-        if (true) {
-            if (undoStack.Count == 0) Application.Quit();
-            else {
-                undone = true;
-                (Move undoMove, bool undoCapture) = undoStack.Pop();
-                game.unmove(undoMove, undoCapture);
-                QueueDraw();
-            }
+        if (undoStack.Count == 0) Application.Quit();
+        else {
+            undone = true;
+            (Move undoMove, bool undoCapture) = undoStack.Pop();
+            game.unmove(undoMove, undoCapture);
+            QueueDraw();
         }
     }
     
